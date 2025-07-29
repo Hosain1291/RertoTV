@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1960년대 레트로 TV</title>
+    <!-- 레트로 느낌을 위한 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+    <style>
+        /* * 전체 페이지 스타일 */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #3d3d3d;
+            font-family: 'Gowun Dodum', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* * TV 전체 컨테이너 */
+        .tv-container {
+            transform: scale(0.75);
+            margin-top: -60px;
+            margin-bottom: -60px;
+        }
+
+        /* * TV 본체 스타일 */
+        .retro-tv {
+            width: 700px;
+            background: #5a3a29;
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.03) 75%),
+                              linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.03) 75%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            border: 10px solid #3e2723;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.7);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* * 스크린 영역 */
+        .screen {
+            width: 640px;
+            height: 480px;
+            background-color: #000;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 15px solid #2d2d2d;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        /* 화면 유리의 빛 반사 효과 */
+        .screen::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 20px;
+            box-shadow: inset 5px 5px 10px rgba(255, 255, 255, 0.1), inset -5px -5px 10px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 4;
+        }
+        
+        /* * 브라운관 노이즈 효과 */
+        .noise {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            background: url('https://i.pinimg.com/originals/62/9c/cd/629ccd010ebe5be08a7bde5da6f7332c.gif') center/cover;
+            opacity: 0.1;
+            transition: opacity 0.3s;
+        }
+        
+        /* 채널 변경 시 노이즈 효과 */
+        .channel-change-effect {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://60s.myretrotvs.com/img/tvstatic.gif') center/cover;
+            z-index: 10;
+            display: none;
+            opacity: 0.8;
+        }
+
+        /* 유튜브 플레이어 영역 */
+        #player-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 100%; height: 100%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            filter: grayscale(100%);
+            transition: opacity 0.2s, filter 0.4s;
+        }
+
+        /* TV 꺼짐 효과 */
+        #power-off-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 15;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #power-off-line {
+            width: 0%;
+            height: 3px;
+            background: #fff;
+            box-shadow: 0 0 10px #fff, 0 0 20px #fff;
+            transition: width 0.3s ease-in-out;
+        }
+
+        /* 소리 켜기 안내 메시지 */
+        #unmute-message {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 5;
+            font-size: 16px;
+            text-align: center;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        #unmute-message.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 컨트롤 패널 */
+        .controls {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 20px 10px 10px 10px;
+        }
+
+        .speaker-grill {
+            width: 80px; height: 80px;
+            background: repeating-linear-gradient(to bottom, #444, #444 2px, #333 2px, #333 4px);
+            border-radius: 5px;
+            margin-right: auto;
+            border: 2px solid #222;
+        }
+
+        .knob-group { display: flex; align-items: center; }
+        
+        .knob {
+            width: 45px; height: 45px;
+            background: linear-gradient(145deg, #e0e0e0, #a0a0a0);
+            border-radius: 50%;
+            border: 3px solid #555;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), inset 0 0 5px rgba(0, 0, 0, 0.5);
+            margin-left: 10px;
+            position: relative;
+            transition: transform 0.1s ease-in-out, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .knob:active { transform: rotate(30deg) scale(0.95); }
+        
+        .knob.unmuted {
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), inset 0 0 5px rgba(0, 0, 0, 0.5), 0 0 15px #fff3b0;
+        }
+
+        #power-knob.on {
+             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), inset 0 0 5px rgba(0, 0, 0, 0.5), 0 0 15px #ff8a80;
+        }
+
+        .knob::after {
+            content: '';
+            position: absolute;
+            top: 5px; left: 50%;
+            transform: translateX(-50%);
+            width: 4px; height: 12px;
+            background-color: #444;
+            border-radius: 2px;
+        }
+        
+        .knob-label {
+            color: #ccc;
+            font-size: 11px;
+            text-align: center;
+            margin-top: 55px;
+            position: absolute;
+            width: 100%;
+            left: 0;
+        }
+
+        .tv-legs {
+            width: 750px;
+            margin: -10px auto 0 auto;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: -1;
+        }
+
+        .leg {
+            width: 20px; height: 100px;
+            background: #4a2a19;
+            transform-origin: top center;
+        }
+        .leg.left { transform: rotate(10deg); }
+        .leg.right { transform: rotate(-10deg); }
+
+        .custom-controls {
+            background-color: #4a2a19;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            width: 600px;
+            margin-top: 20px;
+            border: 3px solid #3e2723;
+        }
+
+        .custom-controls input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 2px solid #333;
+            border-radius: 5px;
+            background-color: #eee;
+            color: #333;
+            font-family: 'Gowun Dodum', sans-serif;
+            margin-bottom: 10px;
+        }
+
+        .custom-controls .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .custom-controls button {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(145deg, #e0e0e0, #a0a0a0);
+            color: #333;
+            font-family: 'Gowun Dodum', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #555;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+            transition: all 0.1s ease-in-out;
+        }
+        
+        .custom-controls button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        #share-link-display {
+            margin-top: 10px;
+            background-color: #333;
+            padding: 5px;
+            border-radius: 5px;
+            color: #a5d6a7;
+            font-size: 12px;
+            text-align: center;
+            min-height: 18px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tv-container">
+        <div class="retro-tv">
+            <div class="screen">
+                <div id="unmute-message">VOLUME 노브를 클릭하면 소리가 켜집니다</div>
+                <div id="power-off-overlay"><div id="power-off-line"></div></div>
+                <div class="channel-change-effect"></div>
+                <div class="noise"></div>
+                <div id="player-container"></div>
+            </div>
+            <div class="controls">
+                <div class="speaker-grill"></div>
+                <div class="knob-group">
+                    <div style="position: relative; text-align: center;">
+                        <div class="knob" id="power-knob"></div>
+                        <span class="knob-label">POWER</span>
+                    </div>
+                    <div style="position: relative; text-align: center;">
+                        <div class="knob" id="volume-knob"></div>
+                        <span class="knob-label">VOLUME</span>
+                    </div>
+                     <div style="position: relative; text-align: center;">
+                        <div class="knob" id="channel-down-knob"></div>
+                        <span class="knob-label">CH ▼</span>
+                    </div>
+                    <div style="position: relative; text-align: center;">
+                        <div class="knob" id="channel-up-knob"></div>
+                        <span class="knob-label">CH ▲</span>
+                    </div>
+                    <div style="position: relative; text-align: center;">
+                        <div class="knob" id="noise-knob"></div>
+                        <span class="knob-label">NOISE</span>
+                    </div>
+                    <div style="position: relative; text-align: center;">
+                        <div class="knob" id="color-knob"></div>
+                        <span class="knob-label">COLOR</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tv-legs">
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+        </div>
+    </div>
+
+    <div class="custom-controls">
+        <input type="text" id="youtube-link-input" placeholder="유튜브 링크를 여기에 붙여넣으세요">
+        <div class="button-group">
+            <button id="load-video-btn">영상 불러오기</button>
+
+            <button id="auto-change-toggle">자동 채널 변경: 켜짐</button>
+        </div>
+        <div id="share-link-display"></div>
+    </div>
+    
+    <audio id="knob-sound" src="data:audio/mpeg;base64,SUQzBAAAAAAAIVRYWENYAAAADklQTUNEUgAAABJDT01FAAAALAAAAGVuZ0lQTUNEUiBDb21tZW50AFhTU0gAAAAPTEFWRjU2LjM2LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAAAAAACQABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBASw=="></audio>
+    
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        // DOM 요소
+        const powerKnob = document.getElementById('power-knob');
+        const volumeKnob = document.getElementById('volume-knob');
+        const channelDownKnob = document.getElementById('channel-down-knob');
+        const channelUpKnob = document.getElementById('channel-up-knob');
+        const noiseKnob = document.getElementById('noise-knob');
+        const colorKnob = document.getElementById('color-knob');
+        const autoChangeToggle = document.getElementById('auto-change-toggle');
+        const noiseOverlay = document.querySelector('.noise');
+        const channelEffect = document.querySelector('.channel-change-effect');
+        const powerOffOverlay = document.getElementById('power-off-overlay');
+        const powerOffLine = document.getElementById('power-off-line');
+        const playerContainer = document.getElementById('player-container');
+        const linkInput = document.getElementById('youtube-link-input');
+        const loadBtn = document.getElementById('load-video-btn');
+        const createLinkBtn = document.getElementById('create-share-link-btn');
+        const shareDisplay = document.getElementById('share-link-display');
+        const unmuteMessage = document.getElementById('unmute-message');
+        const knobSound = document.getElementById('knob-sound');
+
+        const defaultChannels = [ 'cGfspDwnwFA', 'VcIO48gbN0A', 'h152BEBux7k', '721SQWSkV-g', '2L2OEf4FuIA', 'Tck-j-PX_ro' ];
+        const noiseLevels = [0, 0.1, 0.2, 0.4];
+        const colorModes = ['grayscale(100%)', 'sepia(100%)', 'none'];
+        let currentChannelIndex = 0;
+        let currentNoiseIndex = 1;
+        let currentColorIndex = 0;
+        let player;
+        let currentVideoId = '';
+        let isTvOn = true;
+        let isAutoChangeOn = true;
+
+        function onYouTubeIframeAPIReady() {
+            const initialVideoId = getInitialVideoId();
+            currentVideoId = initialVideoId;
+            
+            player = new YT.Player('player-container', {
+                height: '480',
+                width: '640',
+                videoId: initialVideoId,
+                playerVars: { 'autoplay': 1, 'controls': 0, 'rel': 0, 'showinfo': 0, },
+                events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.mute();
+            powerKnob.classList.add('on');
+            noiseOverlay.style.opacity = noiseLevels[currentNoiseIndex];
+            playerContainer.style.filter = colorModes[currentColorIndex];
+        }
+
+        function onPlayerStateChange(event) {
+            if (isAutoChangeOn && isTvOn && event.data === YT.PlayerState.ENDED) {
+                changeChannel('up');
+            }
+        }
+
+        function getInitialVideoId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('video') || defaultChannels[0];
+        }
+
+        function loadVideoById(id) {
+            if (player && id) {
+                currentVideoId = id;
+                player.loadVideoById(id);
+                shareDisplay.textContent = '';
+            }
+        }
+
+        function extractVideoId(url) {
+            let videoId = null;
+            const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regex);
+            if (match) videoId = match[1];
+            return videoId;
+        }
+        
+        function playKnobSound() {
+            knobSound.currentTime = 0;
+            knobSound.play();
+        }
+
+        function turnTvOff() {
+            player.pauseVideo();
+            playerContainer.style.opacity = '0';
+            powerOffOverlay.style.display = 'flex';
+            setTimeout(() => { powerOffLine.style.width = '100%'; }, 10);
+            setTimeout(() => { powerOffLine.style.width = '0%'; }, 300);
+            powerKnob.classList.remove('on');
+            unmuteMessage.classList.add('hidden');
+        }
+
+        function turnTvOn() {
+            powerOffLine.style.width = '0%';
+            powerOffOverlay.style.display = 'flex';
+            setTimeout(() => { powerOffLine.style.width = '100%'; }, 10);
+            setTimeout(() => {
+                powerOffOverlay.style.display = 'none';
+                playerContainer.style.opacity = '1';
+                player.playVideo();
+                if(!player.isMuted()) unmuteMessage.classList.add('hidden');
+                else unmuteMessage.classList.remove('hidden');
+            }, 300);
+            powerKnob.classList.add('on');
+        }
+
+        function changeChannel(direction) {
+            if (!isTvOn || !player) return;
+            playKnobSound();
+            channelEffect.style.display = 'block';
+
+            if (direction === 'up') {
+                currentChannelIndex = (currentChannelIndex + 1) % defaultChannels.length;
+            } else {
+                currentChannelIndex = (currentChannelIndex - 1 + defaultChannels.length) % defaultChannels.length;
+            }
+            
+            const nextVideoId = defaultChannels[currentChannelIndex];
+            
+            setTimeout(() => {
+                loadVideoById(nextVideoId);
+                channelEffect.style.display = 'none';
+            }, 500);
+        }
+
+        powerKnob.addEventListener('click', () => {
+            playKnobSound();
+            isTvOn = !isTvOn;
+            if (isTvOn) turnTvOn();
+            else turnTvOff();
+        });
+
+        volumeKnob.addEventListener('click', () => {
+            if (!isTvOn || !player) return;
+            playKnobSound();
+            if (player.isMuted()) {
+                player.unMute();
+                volumeKnob.classList.add('unmuted');
+                unmuteMessage.classList.add('hidden');
+            } else {
+                player.mute();
+                volumeKnob.classList.remove('unmuted');
+            }
+        });
+
+        channelUpKnob.addEventListener('click', () => changeChannel('up'));
+        channelDownKnob.addEventListener('click', () => changeChannel('down'));
+
+        noiseKnob.addEventListener('click', () => {
+            if (!isTvOn) return;
+            playKnobSound();
+            currentNoiseIndex = (currentNoiseIndex + 1) % noiseLevels.length;
+            noiseOverlay.style.opacity = noiseLevels[currentNoiseIndex];
+        });
+
+        colorKnob.addEventListener('click', () => {
+            if (!isTvOn) return;
+            playKnobSound();
+            currentColorIndex = (currentColorIndex + 1) % colorModes.length;
+            playerContainer.style.filter = colorModes[currentColorIndex];
+        });
+
+        autoChangeToggle.addEventListener('click', () => {
+            isAutoChangeOn = !isAutoChangeOn;
+            autoChangeToggle.textContent = `자동 채널 변경: ${isAutoChangeOn ? '켜짐' : '꺼짐'}`;
+        });
+
+        loadBtn.addEventListener('click', () => {
+            if (!isTvOn) return;
+            const url = linkInput.value;
+            const videoId = extractVideoId(url);
+            if (videoId) {
+                loadVideoById(videoId);
+                linkInput.value = '';
+            } else {
+                shareDisplay.textContent = '유효하지 않은 유튜브 링크입니다.';
+            }
+        });
+
+        createLinkBtn.addEventListener('click', () => {
+            if (!isTvOn) return;
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareableLink = `${baseUrl}?video=${currentVideoId}`;
+            shareDisplay.textContent = `공유 링크: ${shareableLink}`;
+        });
+    </script>
+</body>
+</html>
