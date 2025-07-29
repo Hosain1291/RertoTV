@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My old TV</title>
+    <title>My Old TV</title>
     <!-- 레트로 느낌을 위한 폰트 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -85,7 +85,7 @@
         .channel-change-effect {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://60s.myretrotvs.com/img/tvstatic.gif') center/cover;
+            background: url('https://i.pinimg.com/originals/62/9c/cd/629ccd010ebe5be08a7bde5da6f7332c.gif') center/cover;
             z-index: 10;
             display: none;
             opacity: 0.8;
@@ -278,6 +278,82 @@
             min-height: 18px;
             word-break: break-all;
         }
+
+        /* 반응형 디자인을 위한 미디어 쿼리 */
+        @media (max-width: 768px) {
+            body {
+                overflow: auto; /* 모바일에서 스크롤 허용 */
+                padding: 10px;
+            }
+
+            .tv-container {
+                transform: scale(1); /* 모바일에서는 기본 크기로 */
+                margin-top: 20px;
+                margin-bottom: 20px;
+                width: 100%;
+            }
+
+            .retro-tv {
+                width: 95vw; /* 화면 너비에 맞게 조절 */
+                padding: 15px;
+            }
+
+            .screen {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 4 / 3; /* 4:3 비율 유지 */
+                border-width: 10px;
+            }
+            
+            #player-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                transform: none; /* 변환 제거 */
+            }
+
+            .controls {
+                padding: 15px 5px 5px 5px;
+            }
+
+            .speaker-grill {
+                width: 60px;
+                height: 60px;
+            }
+
+            .knob-group {
+                flex-wrap: wrap; /* 다이얼 그룹 줄바꿈 허용 */
+                justify-content: flex-end;
+                max-width: 200px;
+            }
+
+            .knob {
+                width: 40px;
+                height: 40px;
+                margin-left: 8px;
+                margin-bottom: 20px; /* 라벨 공간 확보 */
+            }
+
+            .knob::after {
+                height: 10px;
+            }
+
+            .knob-label {
+                margin-top: 48px;
+                font-size: 10px;
+            }
+
+            .custom-controls {
+                width: 90vw;
+                padding: 15px;
+            }
+
+            .custom-controls .button-group {
+                flex-direction: column; /* 버튼 세로 정렬 */
+            }
+        }
     </style>
 </head>
 <body>
@@ -331,7 +407,7 @@
         <input type="text" id="youtube-link-input" placeholder="유튜브 링크를 여기에 붙여넣으세요">
         <div class="button-group">
             <button id="load-video-btn">영상 불러오기</button>
-
+            <button id="create-share-link-btn">공유 링크 만들기</button>
             <button id="auto-change-toggle">자동 채널 변경: 켜짐</button>
         </div>
         <div id="share-link-display"></div>
@@ -361,8 +437,7 @@
         const unmuteMessage = document.getElementById('unmute-message');
         const knobSound = document.getElementById('knob-sound');
 
-        const defaultChannels = [ 'cGfspDwnwFA', 'VcIO48gbN0A', 'h152BEBux7k', '721SQWSkV-g', '2L2OEf4FuIA', 'Tck-j-PX_ro' ];
-        const noiseLevels = [0, 0.1, 0.2, 0.4];
+        const defaultChannels = [ 'cGfspDwnwFA', 'VcIO48gbN0A', 'h152BEBux7k', '721SQWSkV-g', '2L2OEf4FuIA', 'Tck-j-PX_ro' ];        const noiseLevels = [0, 0.1, 0.2, 0.4];
         const colorModes = ['grayscale(100%)', 'sepia(100%)', 'none'];
         let currentChannelIndex = 0;
         let currentNoiseIndex = 1;
@@ -377,8 +452,8 @@
             currentVideoId = initialVideoId;
             
             player = new YT.Player('player-container', {
-                height: '480',
-                width: '640',
+                height: '100%',
+                width: '100%',
                 videoId: initialVideoId,
                 playerVars: { 'autoplay': 1, 'controls': 0, 'rel': 0, 'showinfo': 0, },
                 events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
